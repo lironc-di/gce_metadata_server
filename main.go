@@ -71,6 +71,7 @@ type serverConfig struct {
 	flprojectID           string
 	flserviceAccountEmail string
 	flserviAccountFile    string
+    flcustomAttributeFile string
 	flImpersonate         bool
 }
 
@@ -360,6 +361,28 @@ func isEnvironmentOverrideSet() bool {
 	return false
 }
 
+func setCustomAttributes(customAttributesFile string) {
+    if customAttributesFile == "" {
+        return
+    }
+    file, err := os.Open(customAttributesFile)
+    if err != nil {
+        //log.Fatal(err)
+        glog.Error("Can't Open Custom Attributes file " + customAttributesFile)
+        return
+    }
+    defer file.Close()
+    var data map[string]string
+    if err := json.NewDecoder(file).Decode(&data); err != nil {
+        //glog.Fatal(err)
+        glog.Error("Can't parse file " + customAttributesFile + " (expected json file)")
+        return
+    }
+    
+    fmt.Printf("%#v", data)
+    customAttributeMap = data
+}
+
 func main() {
 	ctx := context.Background()
 	flag.StringVar(&cfg.flPort, "port", ":8080", "port...")
@@ -368,6 +391,7 @@ func main() {
 	flag.StringVar(&cfg.flprojectID, "projectId", "", "projectId...")
 	flag.StringVar(&cfg.flserviceAccountEmail, "serviceAccountEmail", "", "serviceAccountEmail...")
 	flag.StringVar(&cfg.flserviAccountFile, "serviceAccountFile", "", "serviceAccountFile...")
+	flag.StringVar(&cfg.flcustomAttributeFile, "customAttributeFile", "", "customAttributeFile - json of custom attributes ({ key:val}) - OPTIONAL ")
 	flag.BoolVar(&cfg.flImpersonate, "impersonate", false, "Impersonate a service Account instead of using the keyfile")
 	flag.Parse()
 
@@ -376,6 +400,9 @@ func main() {
 		glog.Errorf("Invalid Argument error: "+s, v...)
 		os.Exit(-1)
 	}
+
+
+    
 
 	glog.Infof("Starting GCP metadataserver on port, %v", cfg.flPort)
 
@@ -454,6 +481,8 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+    setCustomAttributes(cfg.flcustomAttributeFile)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

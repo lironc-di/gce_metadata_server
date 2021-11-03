@@ -384,6 +384,17 @@ sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 808
 You can extend this sample for any arbitrary metadata you are interested in emulating (eg, disks, hostname, etc).
 Simply add the routes to the webserver and handle the responses accordingly.  It is recommended to view the request-response format directly on the metadata server to compare against.
 
+### Custom Attributes
+You can add a Json file to provide special Metadata custom attributes:
+
+```json
+{
+    "foo": "bar",
+    "gaga": "dada"
+}
+```
+
+You can load the json with `-customAttributeFile FILE_NAME`
 
 ### TODO
 
